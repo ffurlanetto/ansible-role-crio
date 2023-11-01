@@ -1,0 +1,32 @@
+---
+# tasks file for ansible-role-crio
+
+- name: Setup required sysctl params
+  sysctl:
+    name: '{{ item.key }}'
+    value: '{{ item.value }}'
+    sysctl_set: yes
+    state: present
+    reload: yes
+  with_items:
+    - {key: net.bridge.bridge-nf-call-ip6tables, value: 1}
+    - {key: net.bridge.bridge-nf-call-iptables,  value: 1}
+    - {key: net.ipv4.ip_forward,  value: 1}
+
+- name: Add CRI-O repo
+  yum_repository:
+    name: cri-o
+    description: CRI-O repo
+    baseurl: https://cbs.centos.org/repos/paas7-crio-115-release/$basearch/os/
+
+- name: Install CRI-O
+  package:
+    name: cri-o
+    update_cache: yes
+    disable_gpg_check: yes
+
+- name: Start and enable crio service
+  service:
+    name: crio
+    state: started
+    enabled: yes
